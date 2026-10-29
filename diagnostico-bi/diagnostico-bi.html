@@ -1,0 +1,907 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<meta name="robots" content="noindex,nofollow"/>
+<meta name="referrer" content="no-referrer"/>
+<title>Actividad de Diagnóstico — Inteligencia de Negocios · UPDS 2026</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+tailwind.config = {
+  theme: { extend: {
+    colors: { ios: { blue:'#007AFF', green:'#34C759', red:'#FF3B30', orange:'#FF9500',
+                     purple:'#AF52DE', teal:'#5AC8FA', bg:'#F2F2F7', sep:'#E5E5EA', second:'#6C6C70' } },
+    fontFamily: { sans:['-apple-system','BlinkMacSystemFont','Segoe UI','system-ui','sans-serif'] }
+  }}
+}
+</script>
+<style>
+*{-webkit-tap-highlight-color:transparent}
+body{-webkit-font-smoothing:antialiased;background:#F2F2F7}
+.card{background:#fff;border-radius:18px;box-shadow:0 2px 8px rgba(0,0,0,.07),0 0 1px rgba(0,0,0,.06)}
+.opt{border:2px solid #E5E5EA;border-radius:13px;transition:all .16s ease;cursor:pointer;user-select:none}
+.opt:hover{border-color:#C6C6C8;background:#FAFAFA}
+.opt.sel{border-color:#007AFF;background:#EBF5FF}
+.opt.ok{border-color:#34C759!important;background:#E8F8EE!important}
+.opt.fail{border-color:#FF3B30!important;background:#FFF0EE!important}
+.opt.missed{border-color:#FF9500!important;background:#FFF5E6!important}
+.opt:active{transform:scale(.98)}
+.tf{border:2px solid #E5E5EA;border-radius:13px;cursor:pointer;transition:all .16s ease;user-select:none;padding:12px;text-align:center;font-weight:600}
+.tf.sel-true{border-color:#34C759;background:#E8F8EE;color:#1A7A34}
+.tf.sel-false{border-color:#FF3B30;background:#FFF0EE;color:#C0392B}
+.tf.ok{border-color:#34C759;background:#E8F8EE}
+.tf.fail{border-color:#FF3B30;background:#FFF0EE}
+.tf:active{transform:scale(.98)}
+.chip{cursor:pointer;user-select:none;border:2px solid #007AFF;color:#007AFF;background:#EBF5FF;border-radius:10px;padding:5px 14px;font-weight:600;font-size:.875rem;transition:all .15s ease;display:inline-block}
+.chip:hover{background:#D6EBFF}
+.chip.active{background:#007AFF;color:#fff;transform:scale(1.05);box-shadow:0 4px 12px rgba(0,122,255,.3)}
+.chip.used{opacity:.3;pointer-events:none}
+.blank{display:inline-flex;align-items:center;justify-content:center;min-width:148px;height:36px;border:2px dashed #C6C6C8;border-radius:10px;background:#F9F9FB;color:#6C6C70;font-size:.875rem;font-weight:600;cursor:pointer;vertical-align:middle;margin:0 3px;transition:all .15s ease}
+.blank:hover{border-color:#007AFF;background:#EBF5FF;color:#007AFF}
+.blank.ready{border-color:#007AFF;background:#EBF5FF;color:#0055CC;border-style:solid}
+.blank.ok{border-color:#34C759;background:#E8F8EE;color:#1A7A34;border-style:solid}
+.blank.fail{border-color:#FF3B30;background:#FFF0EE;color:#C0392B;border-style:solid}
+.stab{border-radius:10px;padding:7px 14px;font-size:.78rem;font-weight:600;cursor:pointer;transition:all .15s ease;border:2px solid transparent;white-space:nowrap}
+.stab.active{color:#fff}
+.progress-track{background:#E5E5EA;border-radius:99px;height:6px}
+.progress-fill{background:#007AFF;border-radius:99px;height:6px;transition:width .5s cubic-bezier(.34,1.56,.64,1)}
+.section-in{animation:sIn .3s ease}
+@keyframes sIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+.score-ring{animation:pulse 2.4s ease-in-out infinite}
+@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.04)}}
+.cb-box{width:20px;height:20px;border:2px solid #C6C6C8;border-radius:5px;flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:all .15s ease}
+.cb-box.checked{background:#007AFF;border-color:#007AFF}
+.cb-box.ok-check{background:#34C759;border-color:#34C759}
+.cb-box.fail-check{background:#FF3B30;border-color:#FF3B30}
+.cb-box.missed-check{background:#FF9500;border-color:#FF9500}
+input[type=text],input[type=email],input[type=number],input[type=datetime-local]{outline:none;transition:border-color .15s ease}
+input[type=text]:focus,input[type=email]:focus,input[type=number]:focus,input[type=datetime-local]:focus{border-color:#007AFF}
+.insights-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px}
+.insight-card{border-radius:10px;padding:12px;font-size:.85rem;line-height:1.5;border-left:4px solid;background:#f9f9fb}
+.insight-card.high{border-left-color:#FF3B30;background:#FFF0EE}
+.insight-card.high .ic-title{color:#C0392B;font-weight:700}
+.insight-card.high .ic-text{color:#6D2826;font-size:.8rem}
+.insight-card.medium{border-left-color:#FF9500;background:#FFF5E6}
+.insight-card.medium .ic-title{color:#C67000;font-weight:700}
+.insight-card.medium .ic-text{color:#6B3F00;font-size:.8rem}
+.insight-card.low{border-left-color:#34C759;background:#E8F8EE}
+.insight-card.low .ic-title{color:#1A7A34;font-weight:700}
+.insight-card.low .ic-text{color:#0D5722;font-size:.8rem}
+@media print{
+  body{background:#fff!important}
+  #app-shell,#intake-screen,#results-overlay,header,.sticky,.fixed,#bottom-nav{display:none!important}
+}
+</style>
+</head>
+<body class="min-h-screen">
+
+<!-- INTAKE SCREEN -->
+<div id="intake-screen" class="min-h-screen flex items-start justify-center py-10 px-4">
+  <div style="max-width:540px;width:100%">
+    <div class="text-center mb-6">
+      <div class="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-ios-blue mb-3 shadow-lg shadow-blue-200">
+        <span class="text-3xl">📊</span>
+      </div>
+      <h1 class="text-2xl font-bold text-gray-900">Actividad de Diagnóstico</h1>
+      <p class="text-ios-second text-sm mt-1">Inteligencia de Negocios · 9no Semestre · UPDS 2026</p>
+    </div>
+
+    <div class="card p-5 mb-4">
+      <div class="grid grid-cols-3 gap-3 text-center">
+        <div class="bg-blue-50 rounded-xl p-3">
+          <p class="text-xl font-bold text-ios-blue">30</p>
+          <p class="text-xs text-ios-second mt-0.5">preguntas</p>
+        </div>
+        <div class="bg-orange-50 rounded-xl p-3">
+          <p class="text-xl font-bold text-orange-500">60</p>
+          <p class="text-xs text-ios-second mt-0.5">minutos</p>
+        </div>
+        <div class="bg-green-50 rounded-xl p-3">
+          <p class="text-xl font-bold text-ios-green">6</p>
+          <p class="text-xs text-ios-second mt-0.5">secciones</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="card p-5 mb-4">
+      <h2 class="font-bold text-gray-800 mb-4">Datos del estudiante</h2>
+      <div class="space-y-3">
+        <div>
+          <label class="text-xs font-semibold text-ios-second uppercase tracking-wide block mb-1" for="inp-nombre">Nombre completo *</label>
+          <input id="inp-nombre" type="text" maxlength="120" autocomplete="name" placeholder="Ej. Ana Sofía Torres Vidal"
+            class="w-full border-2 border-ios-sep rounded-xl px-4 py-3 text-sm text-gray-800"
+            oninput="checkIntake()"/>
+        </div>
+        <div>
+          <label class="text-xs font-semibold text-ios-second uppercase tracking-wide block mb-1" for="inp-codigo">Código de estudiante *</label>
+          <input id="inp-codigo" type="text" maxlength="40" placeholder="Ej. 2023-SIS-0042"
+            class="w-full border-2 border-ios-sep rounded-xl px-4 py-3 text-sm text-gray-800"
+            oninput="checkIntake()"/>
+        </div>
+        <div>
+          <label class="text-xs font-semibold text-ios-second uppercase tracking-wide block mb-1" for="inp-email">Correo institucional *</label>
+          <input id="inp-email" type="email" maxlength="120" autocomplete="email" placeholder="codigo@upds.edu.bo"
+            class="w-full border-2 border-ios-sep rounded-xl px-4 py-3 text-sm text-gray-800"
+            oninput="checkIntake()"/>
+        </div>
+        <div>
+          <label class="text-xs font-semibold text-ios-second uppercase tracking-wide block mb-1" for="inp-fecha">Fecha y hora de inicio</label>
+          <input id="inp-fecha" type="datetime-local"
+            class="w-full border-2 border-ios-sep rounded-xl px-4 py-3 text-sm text-gray-800 bg-white cursor-text"
+            oninput="checkIntake()"/>
+        </div>
+      </div>
+      <p id="lock-msg" class="text-sm text-ios-red font-semibold mt-3" style="display:none"></p>
+    </div>
+
+    <div class="card p-5 mb-5">
+      <h2 class="font-bold text-gray-800 mb-3">Declaración de Integridad Académica</h2>
+      <div class="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-4 text-xs text-blue-800 leading-relaxed">
+        <p class="font-bold mb-1">Propósito Educativo</p>
+        <p>Esta es una <strong>Actividad de Diagnóstico</strong> diseñada para evaluar tu nivel de conocimientos actuales en Inteligencia de Negocios. Los resultados se utilizarán para personalizar la enseñanza y ofrecerte apoyo en las áreas donde lo necesites. <strong>Tu honestidad es fundamental</strong> para que podamos ayudarte efectivamente.</p>
+        <p class="mt-2">Solo tienes <strong>un intento</strong>. Si cambias de pestaña o de ventana durante la actividad, se anulará con nota 0.</p>
+      </div>
+      <label class="flex items-start gap-3 cursor-pointer group">
+        <input id="inp-consent" type="checkbox" onchange="checkIntake()"
+          class="mt-0.5 w-5 h-5 flex-shrink-0 cursor-pointer"
+          style="accent-color:#007AFF"/>
+        <p class="text-sm text-gray-700 leading-relaxed">
+          Declaro bajo mi honor que las respuestas que proporcione en esta actividad de diagnóstico son <strong>completamente propias</strong>, basadas exclusivamente en mis conocimientos. Entiendo que la honestidad en este proceso es esencial para recibir orientación personalizada.
+        </p>
+      </label>
+    </div>
+
+    <button id="btn-start" onclick="startExam()" disabled
+      class="w-full py-4 rounded-2xl font-bold text-base bg-gray-200 text-gray-400 transition-all cursor-not-allowed">
+      Completar todos los campos para continuar
+    </button>
+
+    <p class="text-center text-xs text-ios-second mt-4 pb-6">
+      M.Sc. Jimmy Nataniel Requena Llorentty · Inteligencia de Negocios · UPDS 2026
+    </p>
+  </div>
+</div>
+
+<!-- EXAM SHELL -->
+<div id="app-shell" style="display:none">
+  <header class="sticky top-0 z-50 bg-white/90 backdrop-blur-md border-b border-ios-sep">
+    <div class="max-w-2xl mx-auto px-4 py-3 flex items-center justify-between gap-3">
+      <div class="flex-1 min-w-0">
+        <p class="text-xs text-ios-second font-medium" id="hd-student">—</p>
+        <h1 class="text-sm font-bold text-gray-900 truncate">Diagnóstico · Inteligencia de Negocios</h1>
+      </div>
+      <div class="text-right shrink-0">
+        <p class="text-xs text-ios-second">Tiempo</p>
+        <p id="timer" class="text-lg font-bold text-gray-800 tabular-nums">60:00</p>
+      </div>
+    </div>
+    <div class="max-w-2xl mx-auto px-4 pb-3">
+      <div class="flex justify-between text-xs text-ios-second mb-1">
+        <span id="prog-label">Sección 1 de 6</span>
+        <span id="prog-pct">0 / 30</span>
+      </div>
+      <div class="progress-track"><div class="progress-fill" id="progress-bar" style="width:0%"></div></div>
+    </div>
+  </header>
+
+  <div class="sticky top-[92px] z-40 bg-ios-bg/95 backdrop-blur-sm py-2 border-b border-ios-sep">
+    <div class="max-w-2xl mx-auto px-3 flex gap-2 overflow-x-auto pb-0.5" style="scrollbar-width:none">
+      <button class="stab" id="tab-0" onclick="goSection(0)">— 1</button>
+      <button class="stab" id="tab-1" onclick="goSection(1)">— 2</button>
+      <button class="stab" id="tab-2" onclick="goSection(2)">— 3</button>
+      <button class="stab" id="tab-3" onclick="goSection(3)">— 4</button>
+      <button class="stab" id="tab-4" onclick="goSection(4)">— 5</button>
+      <button class="stab" id="tab-5" onclick="goSection(5)">— 6</button>
+    </div>
+  </div>
+
+  <main class="max-w-2xl mx-auto px-4 py-5 pb-32" id="main-content"></main>
+
+  <div id="bottom-nav" class="fixed bottom-0 inset-x-0 bg-white/90 backdrop-blur-md border-t border-ios-sep z-50">
+    <div class="max-w-2xl mx-auto px-4 py-3 flex gap-3">
+      <button id="btn-prev" onclick="prevSection()" class="flex-1 py-3 rounded-2xl font-semibold text-sm border-2 border-ios-sep text-ios-second hover:bg-gray-50 transition-all">← Anterior</button>
+      <button id="btn-next" onclick="nextSection()" class="flex-1 py-3 rounded-2xl font-semibold text-sm bg-ios-blue text-white hover:bg-blue-600 transition-all active:scale-95 shadow-md shadow-blue-200">Siguiente →</button>
+      <button id="btn-submit" onclick="confirmSubmit()" style="display:none" class="flex-1 py-3 rounded-2xl font-semibold text-sm bg-ios-green text-white hover:bg-green-600 transition-all active:scale-95 shadow-md shadow-green-200">✓ Entregar</button>
+    </div>
+  </div>
+</div>
+
+<!-- RESULTS OVERLAY -->
+<div id="results-overlay" style="display:none" class="fixed inset-0 z-[100] bg-ios-bg overflow-y-auto">
+  <div class="max-w-2xl mx-auto px-4 py-8">
+
+    <div id="annul-banner" class="card p-4 mb-4 border-2 border-red-400 bg-red-50 text-red-700 text-sm font-semibold" style="display:none"></div>
+
+    <div class="card p-7 text-center mb-4">
+      <p class="text-xs font-semibold tracking-widest text-ios-second uppercase mb-3">Resultado Final</p>
+      <div class="score-ring w-36 h-36 rounded-full mx-auto mb-4 flex flex-col items-center justify-center border-8" id="score-ring">
+        <span class="text-4xl font-bold" id="score-num">--</span>
+        <span class="text-sm text-ios-second">/30</span>
+      </div>
+      <p class="text-2xl font-bold mb-1" id="score-label">--</p>
+      <p class="text-ios-second text-sm mb-3" id="score-sub">--</p>
+      <div class="bg-gray-50 rounded-xl p-3 grid grid-cols-3 gap-2 text-sm">
+        <div><p class="text-xs text-ios-second">Estudiante</p><p class="font-semibold text-gray-800 truncate" id="res-nombre">--</p></div>
+        <div><p class="text-xs text-ios-second">Código</p><p class="font-semibold text-gray-800" id="res-codigo">--</p></div>
+        <div><p class="text-xs text-ios-second">Calificación</p><p class="font-semibold" id="res-grade">--</p></div>
+      </div>
+      <p class="text-xs text-ios-second mt-3">Código de verificación: <span class="font-mono font-bold text-gray-800" id="res-verif">--</span></p>
+    </div>
+
+    <div class="card p-5 mb-4">
+      <h2 class="font-bold text-gray-800 mb-3">Resultado por sección</h2>
+      <div id="breakdown" class="space-y-3"></div>
+    </div>
+
+    <div class="card p-5 mb-4">
+      <h2 class="font-bold text-gray-800 mb-3">Análisis de Tendencias para Enfoque Personalizado</h2>
+      <p class="text-xs text-ios-second mb-4">Basado en tus respuestas, aquí están las áreas donde nos enfocaremos más para tu aprendizaje:</p>
+      <div id="insights-container" class="insights-grid"></div>
+      <div class="mt-4 p-3 bg-blue-50 rounded-lg text-xs text-blue-700">
+        <p class="font-semibold mb-1">Próximas acciones:</p>
+        <p>Tu profesor utilizará este análisis para personalizar las clases, proporcionar recursos específicos y ofrecer tutoría en los temas que necesitas reforzar.</p>
+      </div>
+    </div>
+
+    <button onclick="downloadPDF()" class="w-full py-4 rounded-2xl bg-ios-blue text-white font-bold text-sm mb-4 hover:bg-blue-600 transition-all active:scale-95 shadow-md shadow-blue-200">
+      Descargar retroalimentación PDF
+    </button>
+
+    <div class="card p-5 border-2 border-green-300 bg-green-50 mb-4">
+      <div class="flex gap-3 items-start">
+        <span class="text-2xl flex-shrink-0">✓</span>
+        <div>
+          <p class="font-bold text-green-800 text-sm mb-2">¡Diagnóstico registrado!</p>
+          <p class="text-xs text-green-700 leading-relaxed">
+            Tu actividad de diagnóstico se ha registrado. Solo se permite un intento por correo. Descarga tu retroalimentación y guarda el código de verificación como referencia.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <p class="text-center text-xs text-ios-second pb-4">
+      M.Sc. Jimmy Nataniel Requena Llorentty · Inteligencia de Negocios · UPDS 2026
+    </p>
+  </div>
+</div>
+
+<script>
+const SECTIONS = [
+{ id:0, title:'Conceptos Fundamentales de BI', icon:'💼', color:'blue', type:'multiple',
+  desc:'BI · Data Warehouse · ETL · OLTP vs OLAP · Gobernanza',
+  questions:[
+    { text:'¿Cuál es la principal diferencia entre OLTP (procesamiento transaccional) y OLAP (análisis)?', opts:['OLTP optimiza transacciones rápidas en bases de datos operacionales; OLAP optimiza consultas complejas en almacenes de datos históricos','OLTP usa servidores SQL Server; OLAP solo funciona con PostgreSQL','OLAP es más rápido que OLTP en todas las operaciones'], correct:0, just:'OLTP maneja transacciones diarias (ventas, clientes, inventario). OLAP analiza datos históricos agregados para reportes y tendencias. OLTP suele usar modelos normalizados para evitar duplicados; OLAP usa modelos desnormalizados (como el esquema estrella) para consultas rápidas.' },
+    { text:'¿Qué es un Data Warehouse y cuál es su propósito principal?', opts:['Un servidor donde se almacenan solo bases de datos de prueba para testing','Un repositorio centralizado de datos históricos integrados de múltiples fuentes, diseñado para análisis y reportes','Una herramienta para hacer backups automáticos de bases de datos operacionales'], correct:1, just:'Un Data Warehouse (DW) integra datos de sistemas operacionales heterogéneos en un modelo unificado orientado al análisis. Mantiene histórico, es desnormalizado y está optimizado para lectura, no para transacciones rápidas.' },
+    { text:'¿Cuáles son los componentes clave de un proceso ETL en Inteligencia de Negocios?', opts:['Extract (extrae datos de fuentes), Transform (limpia y normaliza), Load (carga en DW)','Error (maneja fallos), Transfer (envía datos), Locate (busca información)','Execute (ejecuta queries), Transfer (envía reportes), Link (vincula tablas)'], correct:0, just:'ETL es el estándar de integración de datos: Extract captura de fuentes diversas, Transform limpia, valida y transforma, Load carga el resultado en el almacén. Alternativamente existe ELT (primero carga, luego transforma en el destino).' },
+    { text:'¿Qué es la Gobernanza de Datos en el contexto de Inteligencia de Negocios?', opts:['Un departamento de IT que controla quién puede usar Excel','El conjunto de políticas, procesos y roles para gestionar la calidad, seguridad, privacidad y uso de datos en la organización','Una herramienta de software que automatiza completamente el análisis de datos'], correct:1, just:'La Gobernanza de Datos define quién es responsable de cada dato, cómo se protege, se valida, se accede y se usa. Incluye Data Stewardship, metadatos, auditoría y cumplimiento normativo (GDPR, LOPD) y calidad de datos.' },
+    { text:'¿Cuál es el rol de un Data Steward (custodio de datos)?', opts:['Custodiar la seguridad física de los servidores del data center','Responsable de la calidad, documentación, clasificación y cumplimiento de políticas de datos en su dominio de negocio','Un consultor que decide qué preguntas hacer al negocio'], correct:1, just:'El Data Steward es responsable de su área: asegura que los datos sean precisos, completos, clasificados, documentados y usados según políticas. Trabaja con analistas, ingenieros de datos y líderes de negocio.' }
+  ]
+},
+
+{ id:1, title:'Herramientas de BI y Visualización', icon:'📊', color:'purple', type:'multiselect',
+  desc:'Power BI · Looker Studio · Tableau · Facebook Analytics — selecciona TODAS las correctas',
+  questions:[
+    { text:'¿Cuáles de estas herramientas son plataformas de BI empresariales completas? Selecciona todas.', opts:['Power BI de Microsoft — integración con Azure, Excel, análisis avanzado','Looker Studio de Google — análisis visual basado en web, integración con Google Workspace','Tableau — lienzo visual, análisis interactivo, dashboards complejos','Facebook Analytics — análisis específico de métricas de publicidad y redes sociales'], correct:[0,1,2], just:'Power BI, Looker Studio y Tableau son plataformas BI completas. Facebook Analytics es una herramienta de analítica especializada para redes sociales y publicidad digital, no una plataforma BI general.' },
+    { text:'¿Qué características de Power BI la hacen diferente de sus competidores? Selecciona todas las correctas.', opts:['Integración nativa con Excel y Microsoft 365','DAX (Data Analysis Expressions) para cálculos avanzados y medidas personalizadas','Opción de modelos en DirectQuery para consultas en tiempo real a BD','Disponibilidad gratuita para todos los usuarios sin restricciones'], correct:[0,1,2], just:'Power BI tiene integración profunda con Microsoft, DAX es potente para modelos complejos y DirectQuery permite análisis en tiempo real. No es completamente gratuito: requiere licencias de pago para producción, aunque existe una versión personal limitada.' },
+    { text:'¿Cuáles características definen a Looker Studio en el ecosistema de BI? Selecciona todas.', opts:['Herramienta gratuita basada en web sin instalación requerida','Excelente integración con Google Analytics, Google Sheets y fuentes de datos de Google','Requiere pago de suscripción mensual incluso para usar funcionalidades básicas','Muy usado en pequeñas empresas y startups por su costo-beneficio'], correct:[0,1,3], just:'Looker Studio es gratuita, basada en web y adecuada para PyMEs por su integración con el ecosistema Google. No requiere suscripción. Es ideal para startups, aunque menos potente que Power BI o Tableau para análisis muy complejos.' },
+    { text:'¿Cuáles son usos apropiados de Facebook Analytics en Inteligencia de Negocios? Selecciona todos.', opts:['Monitorear ROI de campañas publicitarias en Meta (Facebook, Instagram)','Analizar comportamiento de audiencia: demografía, intereses, conversiones','Reemplazar un Data Warehouse completo de la empresa','Integrar datos de campañas en reportes corporativos junto con otras fuentes'], correct:[0,1,3], just:'Facebook Analytics sirve para medir el rendimiento de la publicidad digital y entender audiencias. No puede reemplazar un DW porque es especializada, pero sí puede integrarse en reportes corporativos extrayendo datos vía API.' },
+    { text:'Comparando Tableau con Power BI y Looker Studio, ¿cuáles son sus ventajas? Selecciona todas.', opts:['Lienzo visual más flexible y potente para visualizaciones complejas y personalizadas','Mejor rendimiento en análisis sobre volúmenes masivos de datos','La opción más económica de las tres herramientas premium','Independencia de ecosistemas: funciona igual de bien con cualquier proveedor de datos'], correct:[0,1,3], just:'Tableau destaca por su flexibilidad visual, su rendimiento con grandes volúmenes e independencia de proveedores. No es la más económica: Power BI suele ser más competitiva en precio para empresas Microsoft, y Looker Studio es gratuita.' }
+  ]
+},
+
+{ id:2, title:'Datos, Gobernanza y Delta Lakes', icon:'🗄️', color:'green', type:'multiselect',
+  desc:'Data Lake · Delta Lake · Gobernanza · Calidad · Seguridad — selecciona TODAS las correctas',
+  questions:[
+    { text:'¿Cuáles son características de un Data Lake? Selecciona todas las correctas.', opts:['Almacena datos en su forma bruta (raw) sin transformación previa','Acepta datos estructurados, semiestructurados y no estructurados','Es más económico que un Data Warehouse por usar almacenamiento de bajo costo','Los datos son inmediatamente listos para reportes sin necesidad de limpieza'], correct:[0,1,2], just:'Un Data Lake es un repositorio masivo, económico, que acepta datos crudos y diversos. La desventaja es que sin gobernanza se convierte en un "data swamp" (pantano). Los datos NO están limpios: requieren transformación antes de usarse.' },
+    { text:'¿Qué es Delta Lake y cómo mejora sobre los data lakes tradicionales? Selecciona todas.', opts:['Añade transacciones ACID sobre datos en formato Parquet en object storage (S3, ADLS)','Permite versionado de datos y time-travel para auditoría y recuperación','Ofrece schema enforcement para asegurar calidad y evolución controlada','Reemplaza completamente la necesidad de Data Warehouses'], correct:[0,1,2], just:'Delta Lake (proyecto de Databricks) añade confiabilidad y gobernanza a los data lakes con transacciones ACID, versionado y control de esquema. NO reemplaza al DW: son complementarios según la arquitectura.' },
+    { text:'¿Cuáles elementos definen una buena gobernanza de datos? Selecciona todos.', opts:['Definición clara de propiedad y responsabilidad por dominio de datos','Catalogación de activos de datos con metadatos y linaje','Políticas de acceso, seguridad y cumplimiento normativo (GDPR, LOPD)','Que un único Data Scientist controle todos los datos sin revisar con otros'], correct:[0,1,2], just:'La gobernanza requiere propiedad clara, metadatos, linaje documentado, control de acceso y cumplimiento. NUNCA debe concentrarse en una sola persona: es un proceso colaborativo entre negocio, datos y seguridad.' },
+    { text:'¿Cuáles métodos mejoran la calidad de datos en un Data Lake o Data Warehouse? Selecciona todos.', opts:['Validación de esquema al ingerir: rechazar datos que no cumplen el tipo esperado','Pruebas de integridad: detectar valores nulos, duplicados, rangos inválidos','Profiling: analizar la distribución y patrones de datos para identificar anomalías','Solicitar que los usuarios corrijan los datos al consultarlos'], correct:[0,1,2], just:'La calidad requiere validación preventiva (esquema), pruebas automáticas e inspección continua. NO es responsabilidad del usuario final: la calidad debe garantizarse antes de que los datos lleguen al usuario.' },
+    { text:'¿Qué consideraciones de seguridad son críticas en gobernanza de datos? Selecciona todas.', opts:['Clasificar datos por sensibilidad: público, interno, confidencial, restringido','Implementar control de acceso granular (RBAC): quién puede ver qué datos','Auditoría de acceso: registrar quién consultó qué datos y cuándo','Encriptación solo es necesaria si los datos están en movimiento, no en reposo'], correct:[0,1,2], just:'La seguridad requiere clasificación, RBAC, auditoría y encriptación tanto en tránsito como en reposo. La encriptación en reposo es obligatoria para datos sensibles según las regulaciones.' }
+  ]
+},
+
+{ id:3, title:'ETL, ELT y Pipelines de Datos', icon:'⚡', color:'orange', type:'truefalse',
+  desc:'PySpark · Pipelines · Orquestación · Ingesta · Batch vs Streaming',
+  questions:[
+    { text:'El enfoque ETL (Extract → Transform → Load) es el único camino correcto para integrar datos en un Data Warehouse.', correct:false, just:'FALSO. ELT (Extract → Load → Transform) es una alternativa moderna válida: carga datos crudos primero y luego transforma en el destino. Es mejor para datos muy diversos o volúmenes masivos. La elección depende de la arquitectura y de los requisitos.' },
+    { text:'PySpark es un framework que permite procesar datos distribuidos en clusters usando Python, optimizado para transformaciones masivas.', correct:true, just:'VERDADERO. PySpark es la interfaz de Python para Apache Spark, ideal para ETL en big data. Ejecuta transformaciones en paralelo sobre clusters (Hadoop, Kubernetes, cloud). Es mucho más rápido que Pandas para datos de más de 1 GB.' },
+    { text:'Un pipeline de datos debe ejecutarse manualmente cada vez que se necesitan nuevos datos para mantener control total.', correct:false, just:'FALSO. Los pipelines productivos se orquestan automáticamente con herramientas como Airflow, Dagster o dbt. La ejecución manual es propensa a errores, lenta y no escala. La orquestación automática con monitoreo es el estándar.' },
+    { text:'Delta Lake es la única forma de garantizar confiabilidad y transacciones ACID en un data lake construido sobre object storage.', correct:false, just:'FALSO. Delta Lake es una opción popular (Databricks), pero Apache Iceberg y Apache Hudi ofrecen características similares. Todas añaden ACID, versionado y control de esquema sobre almacenamiento como S3. La elección depende del ecosistema.' },
+    { text:'El procesamiento batch (procesa datos en lotes) es más lento que el streaming, pero es más simple de implementar y auditar.', correct:true, just:'VERDADERO. Batch procesa datos acumulados (por ejemplo, cada noche). Streaming procesa en tiempo real, pero es más complejo (manejo de estado, tolerancia a fallos). Batch es ideal para reportes nocturnos; streaming, para alertas en tiempo real.' }
+  ]
+},
+
+{ id:4, title:'Análisis de Datos e Insights', icon:'🔍', color:'teal', type:'dragdrop',
+  desc:'KPI · Análisis descriptivo · Predictivo · Tendencias — completa los enunciados',
+  bankWords:['KPI','correlación','segmentación','predicción','tendencias'],
+  questions:[
+    { before:'Un ', after:' (Indicador Clave de Desempeño) es una métrica cuantificable que mide el progreso hacia objetivos de negocio, como la tasa de conversión, la retención de clientes o los ingresos mensuales.', correct:'KPI', just:'Los KPI son métricas críticas vinculadas a la estrategia. "Métrica" es genérico; "KPI" implica relevancia para el negocio. Ejemplos reales: churn rate, customer lifetime value, número de leads, margen operativo.' },
+    { before:'La diferencia entre ', after:' y causalidad es fundamental: dos variables pueden moverse juntas sin que una cause la otra. Por ejemplo, las ventas de helados y las muertes por ahogamiento están correlacionadas, pero ambas son causadas por el verano.', correct:'correlación', just:'La correlación mide una relación estadística. La causalidad requiere intervención o experimento. En datos observacionales, variables ocultas (confundentes) pueden crear falsas correlaciones. El análisis riguroso siempre separa ambos conceptos.' },
+    { before:'El análisis divide la audiencia en grupos homogéneos según características compartidas. Esta técnica se llama ', after:' y es fundamental para la personalización, el targeting y para entender comportamientos diferenciados por grupo.', correct:'segmentación', just:'La segmentación divide clientes o datos según criterios (edad, región, comportamiento, RFM). Cada segmento recibe un análisis y un tratamiento distinto. Es la base del marketing personalizado, los precios dinámicos y las recomendaciones.' },
+    { before:'El análisis llamado ', after:' usa datos históricos y modelos estadísticos o de ML para estimar valores futuros, como demanda, churn o precios. Es distinto del análisis descriptivo, que solo explica el pasado.', correct:'predicción', just:'El análisis descriptivo responde "¿qué pasó?"; el predictivo responde "¿qué pasará?". Requiere variables históricas, métodos de ML (regresión, árboles, redes) y validación cruzada. Ejemplos: pronóstico de ventas, detección de fraude.' },
+    { before:'Entender las ', after:' en los datos (patrones que se repiten, cambios estacionales, crecimientos sostenidos) es esencial para reportes ejecutivos y planificación estratégica.', correct:'tendencias', just:'Las tendencias revelan la dirección de los datos: ¿suben, bajan o se mantienen? Combinadas con la estacionalidad y los ciclos, forman la serie de tiempo. El análisis de tendencias usa medias móviles, descomposición y regresión temporal.' }
+  ]
+},
+
+{ id:5, title:'Casos de Uso y Aplicaciones Prácticas', icon:'💡', color:'blue', type:'multiple',
+  desc:'Retail · Finanzas · Marketing · Operaciones · Salesforce',
+  questions:[
+    { text:'¿Cuál es el caso de uso más común de Business Intelligence en retail?', opts:['Predecir abandono de clientes y capturarlos con ofertas personalizadas, además de optimizar inventario por ubicación y demanda','Reemplazar completamente a los gerentes de tienda con bots de IA','Eliminar la necesidad de bases de datos operacionales'], correct:0, just:'Retail usa BI para el análisis RFM, la recomendación de productos, la planificación de inventario, el análisis de tendencias por tienda o temporada, la segmentación de clientes y la detección de fraude. El resultado es un mejor servicio y márgenes más altos.' },
+    { text:'En una empresa financiera, ¿qué rol juega el análisis de datos con Inteligencia de Negocios?', opts:['Es opcional para decisiones pequeñas pero no es crítico','Es fundamental para scoring de crédito, detección de fraude, gestión de riesgo de cartera y decisiones de pricing de productos','Solo se usa en departamentos de marketing'], correct:1, just:'Finanzas depende de BI para el credit scoring, la detección de fraude (anomalías), el análisis de riesgo de cartera, el VaR (Value at Risk), el cumplimiento normativo y el pricing de productos. Decisiones de millones se basan en estos análisis.' },
+    { text:'¿Cómo se integra Business Intelligence con Salesforce CRM?', opts:['Son sistemas completamente separados sin conexión','Salesforce vende datos directamente a Power BI sin necesidad de ETL','Se extraen datos del CRM (clientes, oportunidades, transacciones) para analizar el pipeline, el ROI de campañas, el ciclo de venta y la predicción de cierres'], correct:2, just:'Salesforce es la fuente operacional. BI extrae datos de cuentas, contactos, oportunidades (pronóstico) y actividades, y los integra en el DW o el data lake para analizar las ventas, la efectividad del equipo y los procesos. ETL o APIs conectan ambos mundos.' },
+    { text:'En operaciones, ¿cómo beneficia el análisis de datos?', opts:['No hay aplicación práctica de BI en operaciones','Reducir tiempos de ciclo, predecir mantenimiento, optimizar recursos, mejorar la calidad y analizar KPI operacionales','BI solo se aplica en empresas de tecnología'], correct:1, just:'En operaciones, el análisis sirve para medir la eficiencia (OEE), el mantenimiento predictivo, la planificación de la producción, la calidad (defectología) y el seguimiento de KPI. Reduce costos, mejora la confiabilidad e identifica cuellos de botella.' },
+    { text:'¿Cuál es la combinación ideal de herramientas en una arquitectura moderna de BI?', opts:['Solo una herramienta lo hace todo: no se necesita combinación','Data Lake (ingesta, datos crudos) → transformación (PySpark, dbt) → Data Warehouse → Power BI o Tableau (consumo), con gobernanza y metadatos','Usar Looker Studio solamente porque es gratis'], correct:1, just:'Una arquitectura moderna incluye ingesta diversa (batch y streaming), una capa raw (data lake), una capa de transformación (limpieza y agregación), una capa de consumo (reportes y BI) y gobernanza transversal. Las herramientas se especializan en cada capa.' }
+  ]
+}
+];
+
+const LOCK_KEY = 'diagnostico_bi_2026_intentos_v1';
+const MAX_SECTION_QUESTIONS = 5;
+const TOTAL_QUESTIONS = 30;
+
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function buildActiveSection(sec) {
+  const s = JSON.parse(JSON.stringify(sec));
+  s.questions = shuffle(s.questions);
+  if (s.type === 'multiple') {
+    s.questions = s.questions.map(q => {
+      const sh = shuffle(q.opts.map((opt, i) => ({ opt, i })));
+      return { ...q, opts: sh.map(x => x.opt), correct: sh.findIndex(x => x.i === q.correct) };
+    });
+  } else if (s.type === 'multiselect') {
+    s.questions = s.questions.map(q => {
+      const sh = shuffle(q.opts.map((opt, i) => ({ opt, i })));
+      const correctSet = new Set(q.correct);
+      const newCorrect = sh.reduce((acc, x, ni) => { if (correctSet.has(x.i)) acc.push(ni); return acc; }, []);
+      return { ...q, opts: sh.map(x => x.opt), correct: newCorrect };
+    });
+  } else if (s.type === 'dragdrop') {
+    s.bankWords = shuffle(s.bankWords);
+  }
+  return s;
+}
+
+/* ---------- utilidades de seguridad ---------- */
+
+// Escapa texto antes de insertarlo como HTML (usado en el PDF).
+function esc(s) {
+  return String(s).replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
+}
+
+function normEmail(e) { return String(e).trim().toLowerCase(); }
+
+// Hash no criptográfico (cyrb53) para un código de verificación legible.
+function codigoVerificacion(texto) {
+  let h1 = 0xdeadbeef, h2 = 0x41c6ce57;
+  for (let i = 0, ch; i < texto.length; i++) {
+    ch = texto.charCodeAt(i);
+    h1 = Math.imul(h1 ^ ch, 2654435761);
+    h2 = Math.imul(h2 ^ ch, 1597334677);
+  }
+  h1 = Math.imul(h1 ^ (h1 >>> 16), 2246822507) ^ Math.imul(h2 ^ (h2 >>> 13), 3266489909);
+  h2 = Math.imul(h2 ^ (h2 >>> 16), 2246822507) ^ Math.imul(h1 ^ (h1 >>> 13), 3266489909);
+  const n = 4294967296 * (2097151 & h2) + (h1 >>> 0);
+  return n.toString(36).toUpperCase().padStart(10, '0').slice(-10);
+}
+
+// Registro de intentos en localStorage. Si el navegador lo bloquea, la página sigue funcionando.
+function readLocks() {
+  try { return JSON.parse(localStorage.getItem(LOCK_KEY) || '{}'); } catch (_) { return {}; }
+}
+function getLock(email) { return readLocks()[normEmail(email)] || null; }
+function writeLock(email, record) {
+  try {
+    const all = readLocks();
+    all[normEmail(email)] = record;
+    localStorage.setItem(LOCK_KEY, JSON.stringify(all));
+  } catch (_) {}
+}
+
+/* ---------- estado ---------- */
+
+let ACTIVE_SECTIONS = [];
+const CLRS = {
+  blue:  {tab:'#007AFF', badge:'bg-blue-100 text-blue-700'},
+  purple:{tab:'#AF52DE', badge:'bg-purple-100 text-purple-700'},
+  green: {tab:'#34C759', badge:'bg-green-100 text-green-700'},
+  orange:{tab:'#FF9500', badge:'bg-orange-100 text-orange-700'},
+  teal:  {tab:'#5AC8FA', badge:'bg-cyan-100 text-cyan-700'},
+};
+
+let state = {
+  student: null,
+  current: 0,
+  answers: null,
+  submitted: false,
+  annulled: false,
+  annulReason: '',
+  dialogOpen: false,
+  monitorOn: false,
+  seconds: 60*60,
+  timerInterval: null,
+  selectedChip: null,
+  consent: false,
+  result: null,
+};
+
+function formatDateTimeLocal(date) {
+  const pad = n => String(n).padStart(2, '0');
+  return `${date.getFullYear()}-${pad(date.getMonth()+1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+}
+
+function formatDateTimeForDisplay(value) {
+  const date = value ? new Date(value) : new Date();
+  return date.toLocaleString('es-BO', {dateStyle:'full', timeStyle:'short'});
+}
+
+function checkIntake() {
+  const n = document.getElementById('inp-nombre').value.trim();
+  const c = document.getElementById('inp-codigo').value.trim();
+  const e = document.getElementById('inp-email').value.trim();
+  const f = document.getElementById('inp-fecha').value;
+  const consent = document.getElementById('inp-consent').checked;
+  state.consent = consent;
+
+  const btn = document.getElementById('btn-start');
+  const lockMsg = document.getElementById('lock-msg');
+  const lock = e && e.includes('@') ? getLock(e) : null;
+
+  if (lock) {
+    lockMsg.style.display = '';
+    lockMsg.textContent = 'Este correo ya registró su diagnóstico (' + lock.fecha + '). Solo se permite un intento. Si crees que es un error, comunícate con tu docente.';
+  } else {
+    lockMsg.style.display = 'none';
+    lockMsg.textContent = '';
+  }
+
+  const ok = n && c && e && f && consent && !lock;
+  if (ok) {
+    btn.disabled = false;
+    btn.className = 'w-full py-4 rounded-2xl font-bold text-base bg-ios-blue text-white transition-all hover:bg-blue-600 active:scale-95 shadow-md shadow-blue-200 cursor-pointer';
+    btn.textContent = 'Comenzar diagnóstico';
+  } else {
+    btn.disabled = true;
+    btn.className = 'w-full py-4 rounded-2xl font-bold text-base bg-gray-200 text-gray-400 transition-all cursor-not-allowed';
+    btn.textContent = lock ? 'Este correo ya tiene un intento registrado' : 'Completar todos los campos para continuar';
+  }
+}
+
+function initializeIntakeScreen() {
+  document.getElementById('inp-fecha').value = formatDateTimeLocal(new Date());
+  checkIntake();
+}
+
+function startExam() {
+  const n = document.getElementById('inp-nombre').value.trim();
+  const c = document.getElementById('inp-codigo').value.trim();
+  const e = document.getElementById('inp-email').value.trim();
+  const f = document.getElementById('inp-fecha').value;
+  if (!n || !c || !e || !f || !document.getElementById('inp-consent').checked) return;
+  if (getLock(e)) { checkIntake(); return; }
+
+  state.student = { nombre:n, codigo:c, email:e, startTime: formatDateTimeForDisplay(f) };
+  ACTIVE_SECTIONS = shuffle(SECTIONS).map(buildActiveSection);
+  state.answers = ACTIVE_SECTIONS.map(sec =>
+    sec.type === 'multiselect'
+      ? Array(sec.questions.length).fill(null).map(() => [])
+      : Array(sec.questions.length).fill(null)
+  );
+
+  document.getElementById('hd-student').textContent = `${n} · ${c}`;
+  document.getElementById('intake-screen').style.display = 'none';
+  document.getElementById('app-shell').style.display = '';
+  startTimer();
+  startMonitor();
+  render();
+}
+
+/* ---------- temporizador y monitor de integridad ---------- */
+
+function startTimer() {
+  state.timerInterval = setInterval(() => {
+    state.seconds--;
+    const m = String(Math.floor(state.seconds/60)).padStart(2,'0');
+    const s = String(state.seconds%60).padStart(2,'0');
+    const el = document.getElementById('timer');
+    if (el) {
+      el.textContent = `${m}:${s}`;
+      if (state.seconds <= 300) { el.style.color = '#FF3B30'; }
+    }
+    if (state.seconds <= 0) { confirmSubmit(true); }
+  }, 1000);
+}
+
+function onVisibility() {
+  if (state.monitorOn && !state.submitted && !state.dialogOpen && document.hidden) {
+    annulExam('Cambio de pestaña o ventana durante la actividad');
+  }
+}
+
+function onWindowBlur() {
+  setTimeout(() => {
+    if (state.monitorOn && !state.submitted && !state.dialogOpen && (document.hidden || !document.hasFocus())) {
+      annulExam('Cambio a otra aplicación o ventana durante la actividad');
+    }
+  }, 50);
+}
+
+function startMonitor() {
+  state.monitorOn = true;
+  document.addEventListener('visibilitychange', onVisibility);
+  window.addEventListener('blur', onWindowBlur);
+}
+
+function stopMonitor() {
+  state.monitorOn = false;
+  document.removeEventListener('visibilitychange', onVisibility);
+  window.removeEventListener('blur', onWindowBlur);
+}
+
+function annulExam(reason) {
+  if (state.submitted) return;
+  state.annulled = true;
+  state.annulReason = reason;
+  finishExam();
+}
+
+/* ---------- navegación y render ---------- */
+
+function countAnswered() {
+  let n = 0;
+  ACTIVE_SECTIONS.forEach((sec, si) => {
+    sec.questions.forEach((_, qi) => {
+      const a = state.answers[si][qi];
+      if (sec.type === 'multiselect') { if (a && a.length > 0) n++; }
+      else if (a !== null) n++;
+    });
+  });
+  return n;
+}
+
+function updateProgress() {
+  const ans = countAnswered();
+  document.getElementById('progress-bar').style.width = (ans / TOTAL_QUESTIONS * 100) + '%';
+  document.getElementById('prog-pct').textContent = `${ans} / ${TOTAL_QUESTIONS}`;
+  document.getElementById('prog-label').textContent = `Sección ${state.current+1} de ${ACTIVE_SECTIONS.length}`;
+}
+
+function updateTabs() {
+  ACTIVE_SECTIONS.forEach((sec, i) => {
+    const tab = document.getElementById(`tab-${i}`);
+    if (!tab) return;
+    tab.textContent = `${sec.icon} ${sec.title.split(' ')[0]}`;
+    tab.className = 'stab';
+    tab.style.background = '';
+    tab.style.borderColor = '';
+    if (i === state.current) {
+      tab.classList.add('active');
+      tab.style.background = CLRS[sec.color].tab;
+      tab.style.borderColor = CLRS[sec.color].tab;
+    }
+  });
+}
+
+function render() { updateTabs(); updateProgress(); updateNavButtons(); renderSection(state.current); }
+
+function updateNavButtons() {
+  const prev = document.getElementById('btn-prev');
+  const next = document.getElementById('btn-next');
+  const sub = document.getElementById('btn-submit');
+  prev.disabled = state.current === 0;
+  if (state.current === ACTIVE_SECTIONS.length - 1) { next.style.display = 'none'; sub.style.display = ''; }
+  else { next.style.display = ''; sub.style.display = 'none'; }
+}
+
+function renderSection(idx, scrollMode) {
+  const sec = ACTIVE_SECTIONS[idx];
+  const col = CLRS[sec.color];
+  const main = document.getElementById('main-content');
+  const prevScroll = scrollMode === 'keep' ? window.scrollY : null;
+  const tipo = {multiple:'Opción múltiple (1 correcta)', multiselect:'Selección múltiple (todas las correctas)', truefalse:'Verdadero / Falso', dragdrop:'Completar enunciados'}[sec.type];
+  let h = `<div class="section-in"><div class="card p-5 mb-5"><div class="flex items-start gap-3"><span class="text-3xl">${sec.icon}</span><div><div class="flex items-center gap-2 mb-1 flex-wrap"><h2 class="text-xl font-bold text-gray-900">${sec.title}</h2><span class="text-xs px-2 py-0.5 rounded-full font-semibold ${col.badge}">${tipo}</span></div><p class="text-xs text-ios-second">${sec.desc}</p></div></div></div>`;
+  if (sec.type === 'multiple') h += renderMultiple(sec, idx, col);
+  else if (sec.type === 'multiselect') h += renderMultiSelect(sec, idx, col);
+  else if (sec.type === 'truefalse') h += renderTrueFalse(sec, idx, col);
+  else h += renderDragDrop(sec, idx, col);
+  h += `</div>`;
+  main.innerHTML = h;
+  if (prevScroll !== null) requestAnimationFrame(() => window.scrollTo({top: prevScroll}));
+  else window.scrollTo({top:0, behavior:'smooth'});
+}
+
+function renderMultiple(sec, si, col) {
+  let h = '<div class="space-y-4">';
+  sec.questions.forEach((q, qi) => {
+    const ans = state.answers[si][qi];
+    h += `<div class="card p-5"><div class="flex gap-3 mb-4"><span class="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 ${col.badge}">${qi+1}</span><p class="text-gray-800 font-medium leading-snug text-sm">${q.text}</p></div><div class="space-y-2">`;
+    q.opts.forEach((opt, oi) => {
+      const isSel = ans === oi;
+      h += `<div class="opt p-3 flex items-start gap-3${isSel ? ' sel' : ''}" data-opt="${si}-${qi}-${oi}" onclick="selectSingle(${si},${qi},${oi})"><span class="w-5 h-5 rounded-full border-2 flex-shrink-0 mt-0.5 flex items-center justify-center ${isSel ? 'border-ios-blue bg-ios-blue' : 'border-gray-300'}" data-circle="${si}-${qi}-${oi}">${isSel ? '<span class="w-2 h-2 rounded-full bg-white block"></span>' : ''}</span><span class="text-sm text-gray-800">${opt}</span></div>`;
+    });
+    h += `</div></div>`;
+  });
+  return h + '</div>';
+}
+
+function selectSingle(si, qi, oi) {
+  if (state.submitted) return;
+  state.answers[si][qi] = oi;
+  ACTIVE_SECTIONS[si].questions[qi].opts.forEach((_, i) => {
+    const el = document.querySelector(`[data-opt="${si}-${qi}-${i}"]`);
+    if (!el) return;
+    const isSel = i === oi;
+    el.className = 'opt p-3 flex items-start gap-3' + (isSel ? ' sel' : '');
+    const c = el.querySelector(`[data-circle="${si}-${qi}-${i}"]`);
+    c.className = 'w-5 h-5 rounded-full border-2 flex-shrink-0 mt-0.5 flex items-center justify-center ' + (isSel ? 'border-ios-blue bg-ios-blue' : 'border-gray-300');
+    c.innerHTML = isSel ? '<span class="w-2 h-2 rounded-full bg-white block"></span>' : '';
+  });
+  updateProgress();
+}
+
+function renderMultiSelect(sec, si, col) {
+  let h = `<div class="space-y-4"><div class="flex items-center gap-2 px-1"><span class="w-5 h-5 rounded bg-purple-100 flex items-center justify-center text-purple-700 text-xs flex-shrink-0">☑</span><p class="text-xs text-ios-second">Selecciona <strong>todas</strong> las opciones correctas. Solo obtienes el punto si marcas exactamente las correctas.</p></div>`;
+  sec.questions.forEach((q, qi) => {
+    const sel = state.answers[si][qi] || [];
+    h += `<div class="card p-5"><div class="flex gap-3 mb-4"><span class="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 ${col.badge}">${qi+1}</span><p class="text-gray-800 font-medium leading-snug text-sm">${q.text}</p></div><div class="space-y-2">`;
+    q.opts.forEach((opt, oi) => {
+      const isSel = sel.includes(oi);
+      h += `<div class="opt p-3 flex items-start gap-3${isSel ? ' sel' : ''}" data-mopt="${si}-${qi}-${oi}" onclick="toggleMulti(${si},${qi},${oi})"><span class="cb-box mt-0.5${isSel ? ' checked' : ''}" data-cb="${si}-${qi}-${oi}">${isSel ? '<svg width="10" height="8" viewBox="0 0 10 8"><path d="M1 4L3.5 6.5L9 1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>' : ''}</span><span class="text-sm text-gray-800">${opt}</span></div>`;
+    });
+    h += `<p class="text-xs text-ios-second mt-2 pl-1" data-count="${si}-${qi}">Seleccionadas: ${sel.length} de ${q.correct.length} necesarias</p></div></div>`;
+  });
+  return h + '</div>';
+}
+
+function toggleMulti(si, qi, oi) {
+  if (state.submitted) return;
+  const arr = state.answers[si][qi] || [];
+  const idx = arr.indexOf(oi);
+  if (idx >= 0) arr.splice(idx, 1); else arr.push(oi);
+  state.answers[si][qi] = arr;
+  const isSel = arr.includes(oi);
+  const el = document.querySelector(`[data-mopt="${si}-${qi}-${oi}"]`);
+  if (el) el.className = 'opt p-3 flex items-start gap-3' + (isSel ? ' sel' : '');
+  const cb = document.querySelector(`[data-cb="${si}-${qi}-${oi}"]`);
+  if (cb) {
+    cb.className = 'cb-box mt-0.5' + (isSel ? ' checked' : '');
+    cb.innerHTML = isSel ? '<svg width="10" height="8" viewBox="0 0 10 8"><path d="M1 4L3.5 6.5L9 1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>' : '';
+  }
+  const counter = document.querySelector(`[data-count="${si}-${qi}"]`);
+  if (counter) counter.textContent = 'Seleccionadas: ' + arr.length + ' de ' + ACTIVE_SECTIONS[si].questions[qi].correct.length + ' necesarias';
+  updateProgress();
+}
+
+function renderTrueFalse(sec, si, col) {
+  let h = '<div class="space-y-4">';
+  sec.questions.forEach((q, qi) => {
+    const ans = state.answers[si][qi];
+    const tCls = 'tf flex-1' + (ans === true ? ' sel-true' : '');
+    const fCls = 'tf flex-1' + (ans === false ? ' sel-false' : '');
+    h += `<div class="card p-5"><div class="flex gap-3 mb-4"><span class="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 ${col.badge}">${qi+1}</span><p class="text-gray-800 font-medium leading-snug text-sm">${q.text}</p></div><div class="flex gap-3"><div class="${tCls}" data-tf="${si}-${qi}-true" onclick="selectTF(${si},${qi},true)">✓ Verdadero</div><div class="${fCls}" data-tf="${si}-${qi}-false" onclick="selectTF(${si},${qi},false)">✗ Falso</div></div></div>`;
+  });
+  return h + '</div>';
+}
+
+function selectTF(si, qi, val) {
+  if (state.submitted) return;
+  state.answers[si][qi] = val;
+  const t = document.querySelector(`[data-tf="${si}-${qi}-true"]`);
+  const f = document.querySelector(`[data-tf="${si}-${qi}-false"]`);
+  if (t) t.className = 'tf flex-1' + (val === true ? ' sel-true' : '');
+  if (f) f.className = 'tf flex-1' + (val === false ? ' sel-false' : '');
+  updateProgress();
+}
+
+function renderDragDrop(sec, si, col) {
+  const used = state.answers[si].filter(a => a !== null);
+  let bank = `<div class="card p-4 mb-4" style="position:sticky;top:140px;z-index:30;box-shadow:0 4px 20px rgba(0,0,0,.13)"><div class="flex items-center justify-between mb-2 gap-2"><p class="text-xs font-semibold text-ios-second uppercase tracking-wide">Banco de palabras</p>${state.selectedChip ? `<span class="text-xs text-ios-blue font-semibold">Toca el espacio en blanco</span>` : `<span class="text-xs text-ios-second">Toca una palabra para seleccionarla</span>`}</div><div class="flex flex-wrap gap-2">`;
+  sec.bankWords.forEach(w => {
+    let cls = 'chip';
+    if (used.includes(w)) cls += ' used';
+    if (state.selectedChip === w) cls += ' active';
+    bank += `<span class="${cls}" onclick="chipClick(${JSON.stringify(w).replace(/"/g, '&quot;')})">${esc(w)}</span>`;
+  });
+  bank += `</div></div>`;
+  let qs = '<div class="space-y-4">';
+  sec.questions.forEach((q, qi) => {
+    const placed = state.answers[si][qi];
+    let bCls = 'blank', bTxt = placed ? esc(placed) : 'toca aquí';
+    if (placed) bCls += ' ready';
+    if (state.submitted && placed) bCls = placed === q.correct ? 'blank ok' : 'blank fail';
+    qs += `<div class="card p-5"><div class="flex gap-3 mb-3"><span class="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 ${col.badge}">${qi+1}</span><p class="text-xs font-semibold text-ios-second uppercase tracking-wide mt-1.5">Completa el enunciado</p></div><p class="text-gray-800 text-sm leading-relaxed">${q.before}<span class="${bCls}" id="blank-${si}-${qi}" onclick="blankClick(${si},${qi})">${bTxt}</span>${q.after}</p></div>`;
+  });
+  return bank + qs + '</div>';
+}
+
+function chipClick(w) {
+  if (state.submitted) return;
+  const used = state.answers[state.current].filter(a => a !== null);
+  if (used.includes(w) && state.selectedChip !== w) return;
+  state.selectedChip = state.selectedChip === w ? null : w;
+  renderSection(state.current, 'keep');
+}
+
+function blankClick(si, qi) {
+  if (state.submitted || !state.selectedChip) return;
+  state.answers[si][qi] = state.selectedChip;
+  state.selectedChip = null;
+  updateProgress();
+  renderSection(state.current, 'keep');
+}
+
+function goSection(idx) { state.current = idx; state.selectedChip = null; render(); }
+function prevSection() { if (state.current > 0) { state.current--; state.selectedChip = null; render(); } }
+function nextSection() { if (state.current < ACTIVE_SECTIONS.length - 1) { state.current++; state.selectedChip = null; render(); } }
+
+/* ---------- calificación y entrega ---------- */
+
+function isCorrect(sec, si, qi) {
+  const q = sec.questions[qi];
+  const ans = state.answers[si][qi];
+  if (sec.type === 'multiselect') {
+    const a = new Set(ans || []);
+    const c = new Set(q.correct);
+    return a.size === c.size && [...c].every(x => a.has(x));
+  }
+  return ans === q.correct;
+}
+
+function confirmSubmit(auto = false) {
+  if (state.submitted) return;
+  if (!auto) {
+    state.dialogOpen = true;
+    const ok = confirm('¿Deseas entregar tu diagnóstico? No podrás volver atrás.');
+    state.dialogOpen = false;
+    if (!ok) return;
+  }
+  finishExam();
+}
+
+function finishExam() {
+  clearInterval(state.timerInterval);
+  stopMonitor();
+  state.submitted = true;
+
+  const sectionCorrect = ACTIVE_SECTIONS.map((sec, si) => sec.questions.reduce((n, _, qi) => n + (isCorrect(sec, si, qi) ? 1 : 0), 0));
+  const correct = sectionCorrect.reduce((a, b) => a + b, 0);
+  const total = ACTIVE_SECTIONS.reduce((n, s) => n + s.questions.length, 0);
+  const effective = state.annulled ? 0 : correct;
+  const pct = Math.round(effective / total * 100);
+  const grade = (effective / total * 5).toFixed(1);
+  const label = pct >= 80 ? 'Excelente' : pct >= 60 ? 'Bueno' : pct >= 40 ? 'Regular' : 'Necesita refuerzo';
+
+  const fechaEntrega = new Date();
+  const verif = codigoVerificacion([state.student.nombre, state.student.codigo, state.student.email, effective, fechaEntrega.toISOString()].join('|'));
+  state.result = { correct: effective, total, pct, grade, label, sectionCorrect, verif, fechaEntrega };
+
+  writeLock(state.student.email, {
+    codigo: state.student.codigo,
+    fecha: fechaEntrega.toLocaleString('es-BO', {dateStyle:'medium', timeStyle:'short'}),
+    correctas: effective,
+    total,
+    nota: grade,
+    anulado: state.annulled,
+    motivo: state.annulReason,
+    verificacion: verif,
+  });
+
+  renderResults();
+  document.getElementById('app-shell').style.display = 'none';
+  document.getElementById('results-overlay').style.display = '';
+  window.scrollTo({top:0});
+}
+
+function renderResults() {
+  const r = state.result;
+  const banner = document.getElementById('annul-banner');
+  if (state.annulled) {
+    banner.style.display = '';
+    banner.textContent = 'EXAMEN ANULADO: ' + state.annulReason + '. La calificación es 0 y el intento queda registrado.';
+  } else {
+    banner.style.display = 'none';
+  }
+  document.getElementById('score-num').textContent = r.correct;
+  document.getElementById('score-label').textContent = state.annulled ? 'Anulado' : r.pct + '% — ' + r.label;
+  document.getElementById('score-sub').textContent = `${r.correct} de ${r.total} respuestas correctas · Nota: ${r.grade}/5`;
+  document.getElementById('res-nombre').textContent = state.student.nombre;
+  document.getElementById('res-codigo').textContent = state.student.codigo;
+  document.getElementById('res-grade').textContent = r.grade + '/5';
+  document.getElementById('res-verif').textContent = r.verif;
+
+  let breakdown = '';
+  ACTIVE_SECTIONS.forEach((sec, si) => {
+    const sc = state.annulled ? 0 : r.sectionCorrect[si];
+    const pctSec = Math.round(sc / sec.questions.length * 100);
+    breakdown += `<div class="p-3 rounded-lg bg-gray-50 flex justify-between items-center"><span><strong>${sec.icon} ${sec.title}</strong><br><span class="text-xs text-ios-second">${sc}/${sec.questions.length} correctas</span></span><span class="text-lg font-bold ${pctSec>=75?'text-green-600':pctSec>=50?'text-orange-600':'text-red-600'}">${pctSec}%</span></div>`;
+  });
+  document.getElementById('breakdown').innerHTML = breakdown;
+
+  const insights = generateInsights();
+  document.getElementById('insights-container').innerHTML = insights.map(i =>
+    `<div class="insight-card ${i.level}"><div class="ic-title">${i.topic}</div><div class="ic-text">${i.recommendation}</div></div>`
+  ).join('') || '<p class="text-ios-second text-xs">Análisis en progreso...</p>';
+}
+
+function generateInsights() {
+  const scored = ACTIVE_SECTIONS.map((sec, si) => ({
+    section: sec.title, icon: sec.icon,
+    score: state.annulled ? 0 : state.result.sectionCorrect[si] / sec.questions.length * 100
+  })).sort((a, b) => a.score - b.score);
+  const out = [];
+  scored.forEach((item, i) => {
+    const level = i < 2 ? 'high' : i < 4 ? 'medium' : 'low';
+    const rec = level === 'high' ? 'Requiere atención prioritaria. Se proporcionarán recursos y tutorías personalizadas.'
+      : level === 'medium' ? 'Área de mejora. Se recomienda profundizar con ejercicios prácticos.'
+      : 'Buen dominio. Podrás ayudar a tus compañeros en este tema.';
+    out.push({ level, topic: item.icon + ' ' + item.section, recommendation: rec });
+  });
+  return out;
+}
+
+/* ---------- PDF (documento HTML para imprimir) ---------- */
+
+function downloadPDF() {
+  const r = state.result;
+  const s = state.student;
+  const insights = generateInsights();
+  const fecha = r.fechaEntrega.toLocaleString('es-BO', {dateStyle:'long', timeStyle:'short'});
+
+  let html = '<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><title>Retroalimentación ' + esc(s.codigo) + '</title>';
+  html += '<style>body{font-family:Arial,sans-serif;padding:30px;background:#f5f5f5;color:#333}';
+  html += '.container{max-width:900px;margin:0 auto;background:#fff;border-radius:12px;padding:30px;box-shadow:0 2px 10px rgba(0,0,0,.1)}';
+  html += '.header{text-align:center;margin-bottom:30px;border-bottom:2px solid #007AFF;padding-bottom:20px}';
+  html += '.header h1{margin:0;font-size:26px}.header p{margin:5px 0;color:#666;font-size:14px}';
+  html += '.info-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:20px;margin:20px 0}';
+  html += '.info-box{padding:15px;background:#f9f9fb;border-radius:8px}.info-box strong{color:#007AFF;display:block;font-size:12px;margin-bottom:5px}';
+  html += '.score-section{text-align:center;margin:30px 0;padding:20px;background:#007AFF;border-radius:12px;color:#fff}';
+  html += '.score-number{font-size:48px;font-weight:bold;margin:10px 0}';
+  html += '.anulado{background:#B71C1C;color:#fff;padding:12px;border-radius:8px;font-weight:bold;text-align:center;margin:20px 0}';
+  html += '.sec{padding:8px 12px;border-bottom:1px solid #eee;display:flex;justify-content:space-between}';
+  html += '.insight{padding:12px;border-left:4px solid;background:#f9f9fb;border-radius:6px;margin-bottom:10px}';
+  html += '.insight.high{border-left-color:#FF3B30}.insight.medium{border-left-color:#FF9500}.insight.low{border-left-color:#34C759}';
+  html += '.footer{text-align:center;margin-top:30px;padding-top:20px;border-top:1px solid #E5E5EA;font-size:12px;color:#666}';
+  html += '</style></head><body><div class="container"><div class="header"><h1>Retroalimentación de Diagnóstico</h1>';
+  html += '<p>Inteligencia de Negocios · 9no Semestre · UPDS 2026</p></div>';
+  html += '<div class="info-grid"><div class="info-box"><strong>Estudiante</strong>' + esc(s.nombre) + '</div>';
+  html += '<div class="info-box"><strong>Código</strong>' + esc(s.codigo) + '</div>';
+  html += '<div class="info-box"><strong>Entrega</strong>' + esc(fecha) + '</div>';
+  html += '<div class="info-box"><strong>Código de verificación</strong><span style="font-family:monospace">' + esc(r.verif) + '</span></div></div>';
+  if (state.annulled) html += '<div class="anulado">EXAMEN ANULADO: ' + esc(state.annulReason) + '. Calificación: 0</div>';
+  html += '<div class="score-section"><div>Resultado final</div><div class="score-number">' + (state.annulled ? 0 : r.correct) + ' / ' + r.total + '</div>';
+  html += '<div>' + (state.annulled ? 'Anulado' : r.pct + '% — ' + esc(r.label) + ' · Nota: ' + r.grade + '/5') + '</div></div>';
+  html += '<h3>Resultado por sección</h3>';
+  ACTIVE_SECTIONS.forEach((sec, si) => {
+    const sc = state.annulled ? 0 : r.sectionCorrect[si];
+    html += '<div class="sec"><span>' + esc(sec.title) + '</span><span>' + sc + '/' + sec.questions.length + '</span></div>';
+  });
+  html += '<h3>Análisis de tendencias</h3>';
+  insights.forEach(i => {
+    html += '<div class="insight ' + i.level + '"><strong>' + esc(i.topic) + '</strong><br>' + esc(i.recommendation) + '</div>';
+  });
+  html += '<div class="footer"><p>M.Sc. Jimmy Nataniel Requena Llorentty · Inteligencia de Negocios · UPDS 2026</p></div></div>';
+  html += '<script>setTimeout(function(){window.print();},500);<\/script></body></html>';
+
+  const blob = new Blob([html], {type:'text/html;charset=utf-8'});
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = 'Retroalimentacion-' + s.codigo.replace(/[^A-Za-z0-9_-]/g, '') + '.html';
+  link.click();
+  setTimeout(() => URL.revokeObjectURL(url), 10000);
+}
+
+if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', initializeIntakeScreen);
+else initializeIntakeScreen();
+</script>
+
+</body>
+</html>
